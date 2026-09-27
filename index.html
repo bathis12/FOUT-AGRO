@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Suivi Clients</title>
+<title>Fout'Agro</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16233d">
 <link rel="icon" href="logo.jpg" type="image/jpeg">
@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Suivi Clients">
+<meta name="apple-mobile-web-app-title" content="Fout'Agro">
 <style>
 :root{
   --ink:#1c3d2e; --ink-2:#2f5c46; --paper:#faf6ec; --card:#ffffff;
@@ -64,7 +64,6 @@ main{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
 }
 .card h2{font-size:1rem; margin:0 0 14px; font-weight:700; color:var(--ink);}
 
-/* Dashboard */
 .stats-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
 .stat-box{background:var(--paper); border:1px solid var(--line); border-radius:9px; padding:12px; border-left:3px solid var(--gold);}
 .stat-box .num{font-size:1.3rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink);}
@@ -88,7 +87,6 @@ button{
 .btn-primary{background:var(--gold); color:#1c1305; grid-column:1/-1; font-weight:700;}
 .btn-primary:hover{background:var(--gold-2);}
 
-/* Package picker (visual cards) */
 .pkg-picker{grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap;}
 .pkg-choice{
   border:2px solid var(--line); border-radius:10px; padding:8px 10px; cursor:pointer;
@@ -141,7 +139,7 @@ button{
 <header>
   <div class="brand">
     <img src="logo.jpg" alt="Fout'Agro">
-    <h1>Suivi Clients</h1>
+    <h1>Fout'Agro</h1>
   </div>
   <div class="totals">
     <div class="paid"><p class="label">Revenus encaissés</p><p class="value" id="totalPaid">0</p></div>
@@ -448,4 +446,4 @@ if('serviceWorker' in navigator){
 }
 </script>
 </body>
-  </html>
+</html>
