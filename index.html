@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivi Clients</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16233d">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Suivi Clients">
+<style>
+:root{
+  --ink:#16233d; --ink-2:#243a63; --paper:#f6f5f2; --card:#ffffff;
+  --line:#e3e0d8; --muted:#767267; --gold:#b8862f; --paid:#2f6d52; --due:#a8452b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#eef0f4; --ink-2:#c9d3e6; --paper:#12151c; --card:#1a1e28;
+    --line:#2b3040; --muted:#9aa1b2; --gold:#d6a75a; --paid:#5fbf94; --due:#e07356;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#eef0f4; --ink-2:#c9d3e6; --paper:#12151c; --card:#1a1e28;
+  --line:#2b3040; --muted:#9aa1b2; --gold:#d6a75a; --paid:#5fbf94; --due:#e07356;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  position:sticky; top:0; top:env(safe-area-inset-top,0px);
+  background:var(--ink); color:#fff; padding:18px 20px;
+  display:flex; flex-wrap:wrap; gap:16px 28px; align-items:baseline; justify-content:space-between;
+  z-index:10;
+}
+header h1{font-size:1.15rem; font-weight:650; margin:0; letter-spacing:.2px;}
+.totals{display:flex; gap:24px; flex-wrap:wrap;}
+.totals div{text-align:right;}
+.totals .label{font-size:.72rem; color:#b9c0d0; margin:0;}
+.totals .value{font-size:1.35rem; font-weight:700; margin:0; font-variant-numeric:tabular-nums;}
+.totals .paid .value{color:#8fe0bb;}
+.totals .due .value{color:#f0a184;}
+
+main{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:18px; margin-bottom:18px;
+}
+.card h2{font-size:.95rem; margin:0 0 14px; font-weight:650;}
+
+form{display:grid; gap:12px; grid-template-columns:1fr 1fr;}
+form .full{grid-column:1/-1;}
+label{display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px;}
+input,select{
+  width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px;
+  background:var(--paper); color:var(--ink); font-size:.95rem;
+}
+input:focus,select:focus{outline:2px solid var(--gold); outline-offset:1px;}
+button{
+  cursor:pointer; border:none; border-radius:7px; padding:10px 16px;
+  font-size:.9rem; font-weight:600;
+}
+.btn-primary{background:var(--ink); color:#fff; grid-column:1/-1;}
+.btn-primary:hover{background:var(--ink-2);}
+.pkg-row{display:flex; gap:8px; align-items:end;}
+.pkg-row input{flex:1;}
+.small-btn{background:transparent; border:1px solid var(--line); color:var(--muted); padding:9px 12px;}
+.small-btn:hover{color:var(--ink); border-color:var(--muted);}
+
+.client{
+  border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px;
+  background:var(--card);
+}
+.client-top{display:flex; justify-content:space-between; gap:12px; align-items:baseline;}
+.client-top strong{font-size:1rem;}
+.client-top span.pkg{color:var(--muted); font-size:.82rem;}
+.client-nums{display:flex; gap:18px; margin-top:8px; flex-wrap:wrap;}
+.client-nums div{font-size:.82rem; color:var(--muted);}
+.client-nums b{display:block; font-size:1rem; color:var(--ink); font-variant-numeric:tabular-nums;}
+.paid-tag{color:var(--paid);}
+.due-tag{color:var(--due);}
+.client-actions{margin-top:10px; display:flex; gap:8px;}
+.client-actions button{padding:6px 10px; font-size:.78rem;}
+.del{background:transparent; color:var(--due); border:1px solid var(--line);}
+.pay{background:transparent; color:var(--paid); border:1px solid var(--line);}
+.empty{color:var(--muted); font-size:.88rem; text-align:center; padding:24px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Suivi Clients</h1>
+  <div class="totals">
+    <div class="paid"><p class="label">Revenus encaissés</p><p class="value" id="totalPaid">0</p></div>
+    <div class="due"><p class="label">Restant à percevoir</p><p class="value" id="totalDue">0</p></div>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Nouveau client</h2>
+    <form id="clientForm">
+      <div class="full">
+        <label>Nom du client</label>
+        <input type="text" id="cName" required>
+      </div>
+      <div>
+        <label>Paquet</label>
+        <select id="cPackage"></select>
+      </div>
+      <div>
+        <label>Prix du paquet</label>
+        <input type="number" id="cPrice" step="0.01" required>
+      </div>
+      <div>
+        <label>Montant déjà payé</label>
+        <input type="number" id="cPaid" step="0.01" value="0">
+      </div>
+      <div>
+        <label>Date</label>
+        <input type="date" id="cDate">
+      </div>
+      <button type="submit" class="btn-primary">Ajouter le client</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Mes paquets</h2>
+    <div class="pkg-row">
+      <input type="text" id="pkgName" placeholder="Nom du paquet">
+      <input type="number" id="pkgPrice" placeholder="Prix" step="0.01">
+      <button class="small-btn" id="addPkg">Ajouter</button>
+    </div>
+    <div id="pkgList" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Clients enregistrés</h2>
+    <div id="clientList"></div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let packages = [];
+let clients = [];
+
+function load(){
+  try{ packages = JSON.parse(localStorage.getItem('sc_packages')||'[]'); }catch(e){ packages=[]; }
+  try{ clients = JSON.parse(localStorage.getItem('sc_clients')||'[]'); }catch(e){ clients=[]; }
+  if(packages.length===0){
+    packages = [{name:'Basique', price:100},{name:'Standard', price:250},{name:'Premium', price:500}];
+    savePackages();
+  }
+}
+function savePackages(){ try{ localStorage.setItem('sc_packages', JSON.stringify(packages)); }catch(e){} }
+function saveClients(){ try{ localStorage.setItem('sc_clients', JSON.stringify(clients)); }catch(e){} }
+
+function fmt(n){ return Number(n||0).toLocaleString('fr-FR',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+function renderPackages(){
+  const sel = $('cPackage');
+  sel.innerHTML = '<option value="">— manuel —</option>' +
+    packages.map((p,i)=>`<option value="${i}">${p.name} (${fmt(p.price)})</option>`).join('');
+  $('pkgList').innerHTML = packages.map((p,i)=>
+    `<span class="small-btn" style="display:inline-flex;gap:8px;align-items:center;">${p.name} — ${fmt(p.price)}
+      <button data-i="${i}" class="rmPkg" style="background:none;border:none;color:var(--due);cursor:pointer;padding:0;">✕</button>
+    </span>`).join('') || '<span class="empty" style="padding:0;">Aucun paquet</span>';
+  document.querySelectorAll('.rmPkg').forEach(b=>b.onclick=()=>{
+    packages.splice(+b.dataset.i,1); savePackages(); renderPackages();
+  });
+}
+
+function renderClients(){
+  const list = $('clientList');
+  if(clients.length===0){
+    list.innerHTML = '<p class="empty">Aucun client pour l’instant. Ajoute-en un ci-dessus.</p>';
+  } else {
+    list.innerHTML = clients.map((c,i)=>{
+      const remaining = c.price - c.paid;
+      return `<div class="client">
+        <div class="client-top">
+          <strong>${c.name}</strong>
+          <span class="pkg">${c.package||'—'}</span>
+        </div>
+        <div class="client-nums">
+          <div>Prix<b>${fmt(c.price)}</b></div>
+          <div>Payé<b class="paid-tag">${fmt(c.paid)}</b></div>
+          <div>Restant<b class="${remaining>0?'due-tag':'paid-tag'}">${fmt(remaining>0?remaining:0)}</b></div>
+        </div>
+        <div class="client-actions">
+          ${remaining>0?`<button class="pay" data-i="${i}" data-action="pay">Marquer payé</button>`:''}
+          <button class="del" data-i="${i}" data-action="del">Supprimer</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.querySelectorAll('[data-action="del"]').forEach(b=>b.onclick=()=>{
+    clients.splice(+b.dataset.i,1); saveClients(); renderAll();
+  });
+  document.querySelectorAll('[data-action="pay"]').forEach(b=>b.onclick=()=>{
+    const c = clients[+b.dataset.i]; c.paid = c.price; saveClients(); renderAll();
+  });
+  const totalPaid = clients.reduce((s,c)=>s+Number(c.paid||0),0);
+  const totalDue = clients.reduce((s,c)=>s+Math.max(c.price-c.paid,0),0);
+  $('totalPaid').textContent = fmt(totalPaid);
+  $('totalDue').textContent = fmt(totalDue);
+}
+
+function renderAll(){ renderPackages(); renderClients(); }
+
+$('cPackage').addEventListener('change', e=>{
+  const v = e.target.value;
+  if(v!==''){ $('cPrice').value = packages[+v].price; }
+});
+
+$('clientForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const pkgIdx = $('cPackage').value;
+  clients.push({
+    name: $('cName').value.trim(),
+    package: pkgIdx!==''? packages[+pkgIdx].name : 'Manuel',
+    price: parseFloat($('cPrice').value)||0,
+    paid: parseFloat($('cPaid').value)||0,
+    date: $('cDate').value || new Date().toISOString().slice(0,10)
+  });
+  saveClients();
+  e.target.reset();
+  renderAll();
+});
+
+$('addPkg').addEventListener('click', ()=>{
+  const name = $('pkgName').value.trim();
+  const price = parseFloat($('pkgPrice').value);
+  if(!name || isNaN(price)) return;
+  packages.push({name, price});
+  savePackages();
+  $('pkgName').value=''; $('pkgPrice').value='';
+  renderPackages();
+});
+
+load();
+renderAll();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
