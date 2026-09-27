@@ -10,16 +10,8 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    }
+      
+    }"src": "icon.svg" → "src": "logo.jpg"
+"type": "image/svg+xml" → "type": "image/jpeg"
   ]
 }
