@@ -1,4 +1,5 @@
-"short_name": "Suivi Clients",
+{
+  "name": "Suivi Clients","short_name": "Suivi Clients",
   "description": "Gérez vos clients, paquets, prix et paiements — sans compte, sans serveur.",
   "start_url": "./index.html",
   "scope": "./",
