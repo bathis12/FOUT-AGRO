@@ -1,5 +1,7 @@
+
 {
-  "name": "Suivi Clients","short_name": "Suivi Clients",
+  "name": "Fout'Agro",
+  "short_name": "Fout'Agro",
   "description": "Gérez vos clients, paquets, prix et paiements — sans compte, sans serveur.",
   "start_url": "./index.html",
   "scope": "./",
