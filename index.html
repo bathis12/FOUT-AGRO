@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -14,21 +15,22 @@
 <meta name="apple-mobile-web-app-title" content="Suivi Clients">
 <style>
 :root{
-  --ink:#16233d; --ink-2:#243a63; --paper:#f6f5f2; --card:#ffffff;
-  --line:#e3e0d8; --muted:#767267; --gold:#b8862f; --paid:#2f6d52; --due:#a8452b;
+  --ink:#1c3d2e; --ink-2:#2f5c46; --paper:#faf6ec; --card:#ffffff;
+  --line:#e6ddc4; --muted:#77715f; --gold:#d99a2b; --gold-2:#b97e1f;
+  --paid:#2f6d52; --due:#a8452b;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --ink:#eef0f4; --ink-2:#c9d3e6; --paper:#12151c; --card:#1a1e28;
-    --line:#2b3040; --muted:#9aa1b2; --gold:#d6a75a; --paid:#5fbf94; --due:#e07356;
+    --ink:#eef0f4; --ink-2:#a9d6bd; --paper:#0f1712; --card:#182620;
+    --line:#2a3b31; --muted:#9aa89e; --gold:#e6b04d; --gold-2:#d99a2b; --paid:#5fbf94; --due:#e07356;
   }
 }
 :root[data-theme="dark"]{
-  --ink:#eef0f4; --ink-2:#c9d3e6; --paper:#12151c; --card:#1a1e28;
-  --line:#2b3040; --muted:#9aa1b2; --gold:#d6a75a; --paid:#5fbf94; --due:#e07356;
+  --ink:#eef0f4; --ink-2:#a9d6bd; --paper:#0f1712; --card:#182620;
+  --line:#2a3b31; --muted:#9aa89e; --gold:#e6b04d; --gold-2:#d99a2b; --paid:#5fbf94; --due:#e07356;
 }
 *{box-sizing:border-box;}
 html,body{height:100%;}
@@ -39,25 +41,37 @@ body{
 }
 header{
   position:sticky; top:0; top:env(safe-area-inset-top,0px);
-  background:var(--ink); color:#fff; padding:18px 20px;
-  display:flex; flex-wrap:wrap; gap:16px 28px; align-items:baseline; justify-content:space-between;
-  z-index:10;
+  background:linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 130%);
+  color:#fff; padding:20px 20px;
+  display:flex; flex-wrap:wrap; gap:14px 28px; align-items:center; justify-content:space-between;
+  z-index:10; border-bottom:3px solid var(--gold);
 }
-header h1{font-size:1.15rem; font-weight:650; margin:0; letter-spacing:.2px;}
-.totals{display:flex; gap:24px; flex-wrap:wrap;}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand img{width:34px; height:34px; border-radius:50%; display:block;}
+header h1{font-size:1.1rem; font-weight:700; margin:0; letter-spacing:.2px;}
+.totals{display:flex; gap:22px; flex-wrap:wrap;}
 .totals div{text-align:right;}
-.totals .label{font-size:.72rem; color:#b9c0d0; margin:0;}
-.totals .value{font-size:1.35rem; font-weight:700; margin:0; font-variant-numeric:tabular-nums;}
-.totals .paid .value{color:#8fe0bb;}
-.totals .due .value{color:#f0a184;}
+.totals .label{font-size:.68rem; color:rgba(255,255,255,.65); margin:0; text-transform:none;}
+.totals .value{font-size:1.3rem; font-weight:700; margin:0; font-variant-numeric:tabular-nums;}
+.totals .paid .value{color:#a9e6c4;}
+.totals .due .value{color:#f3c98a;}
 
 main{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
 
 .card{
-  background:var(--card); border:1px solid var(--line); border-radius:10px;
-  padding:18px; margin-bottom:18px;
+  background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:18px; margin-bottom:16px; border-top:3px solid var(--gold);
 }
-.card h2{font-size:.95rem; margin:0 0 14px; font-weight:650;}
+.card h2{font-size:1rem; margin:0 0 14px; font-weight:700; color:var(--ink);}
+
+/* Dashboard */
+.stats-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
+.stat-box{background:var(--paper); border:1px solid var(--line); border-radius:9px; padding:12px; border-left:3px solid var(--gold);}
+.stat-box .num{font-size:1.3rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink);}
+.stat-box .lbl{font-size:.75rem; color:var(--muted); margin-top:2px;}
+#chartWrap{margin-top:16px;}
+#chartWrap canvas{width:100%; height:180px; display:block;}
+.chart-empty{color:var(--muted); font-size:.85rem; text-align:center; padding:20px 0;}
 
 form{display:grid; gap:12px; grid-template-columns:1fr 1fr;}
 form .full{grid-column:1/-1;}
@@ -71,8 +85,23 @@ button{
   cursor:pointer; border:none; border-radius:7px; padding:10px 16px;
   font-size:.9rem; font-weight:600;
 }
-.btn-primary{background:var(--ink); color:#fff; grid-column:1/-1;}
-.btn-primary:hover{background:var(--ink-2);}
+.btn-primary{background:var(--gold); color:#1c1305; grid-column:1/-1; font-weight:700;}
+.btn-primary:hover{background:var(--gold-2);}
+
+/* Package picker (visual cards) */
+.pkg-picker{grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap;}
+.pkg-choice{
+  border:2px solid var(--line); border-radius:10px; padding:8px 10px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px; width:92px;
+  background:var(--paper); text-align:center;
+}
+.pkg-choice img{width:48px; height:48px; object-fit:cover; border-radius:6px;}
+.pkg-choice .ph{width:48px; height:48px; border-radius:6px; background:var(--line); display:flex; align-items:center; justify-content:center; font-size:1.4rem;}
+.pkg-choice .nm{font-size:.72rem; font-weight:600; line-height:1.1;}
+.pkg-choice .pr{font-size:.68rem; color:var(--muted);}
+.pkg-choice.selected{border-color:var(--gold); background:rgba(217,154,43,.12);}
+.pkg-choice.manual{justify-content:center;}
+
 .pkg-row{display:flex; gap:8px; align-items:end; flex-wrap:wrap;}
 .pkg-row input[type="text"],.pkg-row input[type="number"]{flex:1; min-width:100px;}
 .pkg-row input[type="file"]{flex:1; min-width:140px; font-size:.78rem; padding:6px;}
@@ -85,6 +114,8 @@ button{
 }
 .pkg-card img{width:32px; height:32px; object-fit:cover; border-radius:6px;}
 .pkg-card .rmPkg{background:none;border:none;color:var(--due);cursor:pointer;padding:0;font-size:1rem;}
+
+.search-box{margin-bottom:12px;}
 
 .client{
   border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px;
@@ -108,7 +139,10 @@ button{
 <body>
 
 <header>
-  <h1>Suivi Clients</h1>
+  <div class="brand">
+    <img src="logo.jpg" alt="Fout'Agro">
+    <h1>Suivi Clients</h1>
+  </div>
   <div class="totals">
     <div class="paid"><p class="label">Revenus encaissés</p><p class="value" id="totalPaid">0</p></div>
     <div class="due"><p class="label">Restant à percevoir</p><p class="value" id="totalDue">0</p></div>
@@ -117,15 +151,29 @@ button{
 
 <main>
   <div class="card">
+    <h2>Tableau de bord</h2>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="num" id="statClients">0</div><div class="lbl">Clients</div></div>
+      <div class="stat-box"><div class="num" id="statPaquetsVendus">0</div><div class="lbl">Paquets vendus</div></div>
+      <div class="stat-box"><div class="num" id="statTotalVentes">0</div><div class="lbl">Total des ventes</div></div>
+      <div class="stat-box"><div class="num" id="statMoyenne">0</div><div class="lbl">Panier moyen</div></div>
+    </div>
+    <div id="chartWrap">
+      <canvas id="chartCanvas"></canvas>
+      <div class="chart-empty" id="chartEmpty" style="display:none;">Ajoute des clients pour voir le graphique</div>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Nouveau client</h2>
     <form id="clientForm">
       <div class="full">
         <label>Nom du client</label>
         <input type="text" id="cName" required>
       </div>
-      <div>
+      <div class="full">
         <label>Paquet</label>
-        <select id="cPackage"></select>
+        <div class="pkg-picker" id="pkgPicker"></div>
       </div>
       <div>
         <label>Prix du paquet</label>
@@ -156,6 +204,7 @@ button{
 
   <div class="card">
     <h2>Clients enregistrés</h2>
+    <input type="text" id="searchClient" class="search-box" placeholder="Rechercher un client...">
     <div id="clientList"></div>
   </div>
 </main>
@@ -164,12 +213,17 @@ button{
 const $ = id => document.getElementById(id);
 let packages = [];
 let clients = [];
+let selectedPkgIdx = '';
 
 function load(){
   try{ packages = JSON.parse(localStorage.getItem('sc_packages')||'[]'); }catch(e){ packages=[]; }
   try{ clients = JSON.parse(localStorage.getItem('sc_clients')||'[]'); }catch(e){ clients=[]; }
   if(packages.length===0){
-    packages = [{name:'Basique', price:100, photo:''},{name:'Standard', price:250, photo:''},{name:'Premium', price:500, photo:''}];
+    packages = [
+      {name:'Bissap blanc 100g + 2kg NPK', price:5000, photo:''},
+      {name:'Laitue 5g + 2kg NPK', price:5000, photo:''},
+      {name:'Oignon 10g + 2kg NPK', price:6000, photo:''}
+    ];
     savePackages();
   }
 }
@@ -197,9 +251,24 @@ function resizeImage(file, maxSize, callback){
 }
 
 function renderPackages(){
-  const sel = $('cPackage');
-  sel.innerHTML = '<option value="">— manuel —</option>' +
-    packages.map((p,i)=>`<option value="${i}">${p.name} (${fmt(p.price)})</option>`).join('');
+  const picker = $('pkgPicker');
+  let html = `<div class="pkg-choice manual${selectedPkgIdx===''?' selected':''}" data-i="">
+      <div class="ph">✎</div><div class="nm">Manuel</div></div>`;
+  html += packages.map((p,i)=>`
+    <div class="pkg-choice${String(selectedPkgIdx)===String(i)?' selected':''}" data-i="${i}">
+      ${p.photo?`<img src="${p.photo}" alt="${p.name}">`:'<div class="ph">📦</div>'}
+      <div class="nm">${p.name}</div>
+      <div class="pr">${fmt(p.price)}</div>
+    </div>`).join('');
+  picker.innerHTML = html;
+  picker.querySelectorAll('.pkg-choice').forEach(el=>{
+    el.onclick = ()=>{
+      selectedPkgIdx = el.dataset.i;
+      if(selectedPkgIdx!==''){ $('cPrice').value = packages[+selectedPkgIdx].price; }
+      renderPackages();
+    };
+  });
+
   $('pkgList').innerHTML = packages.map((p,i)=>
     `<span class="pkg-card">
       ${p.photo?`<img src="${p.photo}" alt="${p.name}">`:''}
@@ -207,16 +276,91 @@ function renderPackages(){
       <button data-i="${i}" class="rmPkg">✕</button>
     </span>`).join('') || '<span class="empty" style="padding:0;">Aucun paquet</span>';
   document.querySelectorAll('.rmPkg').forEach(b=>b.onclick=()=>{
-    packages.splice(+b.dataset.i,1); savePackages(); renderPackages();
+    packages.splice(+b.dataset.i,1);
+    if(String(selectedPkgIdx)===String(b.dataset.i)) selectedPkgIdx='';
+    savePackages(); renderPackages();
   });
 }
 
-function renderClients(){
+function drawChart(){
+  const canvas = $('chartCanvas');
+  const emptyMsg = $('chartEmpty');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || canvas.parentElement.clientWidth;
+  const cssH = 180;
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  const totals = {};
+  clients.forEach(c=>{
+    const key = c.package || 'Manuel';
+    totals[key] = (totals[key]||0) + Number(c.price||0);
+  });
+  const labels = Object.keys(totals);
+  if(labels.length===0){
+    canvas.style.display='none'; emptyMsg.style.display='block'; return;
+  }
+  canvas.style.display='block'; emptyMsg.style.display='none';
+
+  const values = labels.map(l=>totals[l]);
+  const maxVal = Math.max(...values, 1);
+  const barColor = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#d99a2b';
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1c3d2e';
+  const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#77715f';
+
+  const padTop = 10, padBottom = 34, padSide = 8;
+  const chartH = cssH - padTop - padBottom;
+  const n = labels.length;
+  const gap = 14;
+  const barW = Math.min(56, (cssW - padSide*2 - gap*(n-1)) / n);
+  const totalW = barW*n + gap*(n-1);
+  let x = (cssW - totalW)/2;
+
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+
+  values.forEach((v,i)=>{
+    const h = maxVal>0 ? (v/maxVal)*chartH : 0;
+    const y = padTop + (chartH - h);
+    ctx.fillStyle = barColor;
+    ctx.beginPath();
+    if(ctx.roundRect){ ctx.roundRect(x, y, barW, h, 6); } else { ctx.rect(x,y,barW,h); }
+    ctx.fill();
+
+    ctx.fillStyle = mutedColor;
+    ctx.fillText(fmt(v), x + barW/2, y - 4 < 10 ? 10 : y - 4);
+
+    ctx.fillStyle = textColor;
+    const label = labels[i].length > 10 ? labels[i].slice(0,9)+'…' : labels[i];
+    ctx.fillText(label, x + barW/2, cssH - padBottom + 16);
+
+    x += barW + gap;
+  });
+}
+
+function renderDashboard(){
+  $('statClients').textContent = clients.length;
+  $('statPaquetsVendus').textContent = clients.length;
+  const totalVentes = clients.reduce((s,c)=>s+Number(c.price||0),0);
+  $('statTotalVentes').textContent = fmt(totalVentes);
+  const moyenne = clients.length ? totalVentes/clients.length : 0;
+  $('statMoyenne').textContent = fmt(moyenne);
+  drawChart();
+}
+
+function renderClients(filter){
   const list = $('clientList');
+  const term = (filter||'').trim().toLowerCase();
+  const filtered = term ? clients.filter(c=>c.name.toLowerCase().includes(term)) : clients;
   if(clients.length===0){
     list.innerHTML = '<p class="empty">Aucun client pour l’instant. Ajoute-en un ci-dessus.</p>';
+  } else if(filtered.length===0){
+    list.innerHTML = '<p class="empty">Aucun client ne correspond à la recherche.</p>';
   } else {
-    list.innerHTML = clients.map((c,i)=>{
+    list.innerHTML = filtered.map((c)=>{
+      const i = clients.indexOf(c);
       const remaining = c.price - c.paid;
       return `<div class="client">
         <div class="client-top">
@@ -247,25 +391,28 @@ function renderClients(){
   $('totalDue').textContent = fmt(totalDue);
 }
 
-function renderAll(){ renderPackages(); renderClients(); }
+function renderAll(){
+  renderPackages();
+  renderClients($('searchClient') ? $('searchClient').value : '');
+  renderDashboard();
+}
 
-$('cPackage').addEventListener('change', e=>{
-  const v = e.target.value;
-  if(v!==''){ $('cPrice').value = packages[+v].price; }
+$('searchClient').addEventListener('input', e=>{
+  renderClients(e.target.value);
 });
 
 $('clientForm').addEventListener('submit', e=>{
   e.preventDefault();
-  const pkgIdx = $('cPackage').value;
   clients.push({
     name: $('cName').value.trim(),
-    package: pkgIdx!==''? packages[+pkgIdx].name : 'Manuel',
+    package: selectedPkgIdx!==''? packages[+selectedPkgIdx].name : 'Manuel',
     price: parseFloat($('cPrice').value)||0,
     paid: parseFloat($('cPaid').value)||0,
     date: $('cDate').value || new Date().toISOString().slice(0,10)
   });
   saveClients();
   e.target.reset();
+  selectedPkgIdx = '';
   renderAll();
 });
 
@@ -279,15 +426,17 @@ $('addPkg').addEventListener('click', ()=>{
       packages.push({name, price, photo: dataUrl});
       savePackages();
       $('pkgName').value=''; $('pkgPrice').value=''; fileInput.value='';
-      renderPackages();
+      renderAll();
     });
   } else {
     packages.push({name, price, photo:''});
     savePackages();
     $('pkgName').value=''; $('pkgPrice').value='';
-    renderPackages();
+    renderAll();
   }
 });
+
+window.addEventListener('resize', ()=>{ drawChart(); });
 
 load();
 renderAll();
@@ -299,4 +448,4 @@ if('serviceWorker' in navigator){
 }
 </script>
 </body>
-</html>
+  </html>
