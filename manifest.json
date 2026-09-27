@@ -1,6 +1,4 @@
-{
-  "name": "Suivi Clients",
-  "short_name": "Suivi Clients",
+"short_name": "Suivi Clients",
   "description": "Gérez vos clients, paquets, prix et paiements — sans compte, sans serveur.",
   "start_url": "./index.html",
   "scope": "./",
@@ -10,8 +8,16 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      
-    }"src": "icon.svg" → "src": "logo.jpg"
-"type": "image/svg+xml" → "type": "image/jpeg"
+      "src": "logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
   ]
 }
