@@ -6,8 +6,8 @@
 <title>Suivi Clients</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#16233d">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="logo.jpg" type="image/jpeg">
+<link rel="apple-touch-icon" href="logo.jpg">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -73,10 +73,18 @@ button{
 }
 .btn-primary{background:var(--ink); color:#fff; grid-column:1/-1;}
 .btn-primary:hover{background:var(--ink-2);}
-.pkg-row{display:flex; gap:8px; align-items:end;}
-.pkg-row input{flex:1;}
+.pkg-row{display:flex; gap:8px; align-items:end; flex-wrap:wrap;}
+.pkg-row input[type="text"],.pkg-row input[type="number"]{flex:1; min-width:100px;}
+.pkg-row input[type="file"]{flex:1; min-width:140px; font-size:.78rem; padding:6px;}
 .small-btn{background:transparent; border:1px solid var(--line); color:var(--muted); padding:9px 12px;}
 .small-btn:hover{color:var(--ink); border-color:var(--muted);}
+
+.pkg-card{
+  display:inline-flex; gap:8px; align-items:center; border:1px solid var(--line);
+  border-radius:8px; padding:6px 10px; background:var(--paper);
+}
+.pkg-card img{width:32px; height:32px; object-fit:cover; border-radius:6px;}
+.pkg-card .rmPkg{background:none;border:none;color:var(--due);cursor:pointer;padding:0;font-size:1rem;}
 
 .client{
   border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px;
@@ -140,6 +148,7 @@ button{
     <div class="pkg-row">
       <input type="text" id="pkgName" placeholder="Nom du paquet">
       <input type="number" id="pkgPrice" placeholder="Prix" step="0.01">
+      <input type="file" id="pkgPhoto" accept="image/*">
       <button class="small-btn" id="addPkg">Ajouter</button>
     </div>
     <div id="pkgList" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
@@ -160,7 +169,7 @@ function load(){
   try{ packages = JSON.parse(localStorage.getItem('sc_packages')||'[]'); }catch(e){ packages=[]; }
   try{ clients = JSON.parse(localStorage.getItem('sc_clients')||'[]'); }catch(e){ clients=[]; }
   if(packages.length===0){
-    packages = [{name:'Basique', price:100},{name:'Standard', price:250},{name:'Premium', price:500}];
+    packages = [{name:'Basique', price:100, photo:''},{name:'Standard', price:250, photo:''},{name:'Premium', price:500, photo:''}];
     savePackages();
   }
 }
@@ -169,13 +178,33 @@ function saveClients(){ try{ localStorage.setItem('sc_clients', JSON.stringify(c
 
 function fmt(n){ return Number(n||0).toLocaleString('fr-FR',{minimumFractionDigits:2, maximumFractionDigits:2}); }
 
+function resizeImage(file, maxSize, callback){
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      let w = img.width, h = img.height;
+      if(w > h){ if(w > maxSize){ h = Math.round(h*maxSize/w); w = maxSize; } }
+      else { if(h > maxSize){ w = Math.round(w*maxSize/h); h = maxSize; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function renderPackages(){
   const sel = $('cPackage');
   sel.innerHTML = '<option value="">— manuel —</option>' +
     packages.map((p,i)=>`<option value="${i}">${p.name} (${fmt(p.price)})</option>`).join('');
   $('pkgList').innerHTML = packages.map((p,i)=>
-    `<span class="small-btn" style="display:inline-flex;gap:8px;align-items:center;">${p.name} — ${fmt(p.price)}
-      <button data-i="${i}" class="rmPkg" style="background:none;border:none;color:var(--due);cursor:pointer;padding:0;">✕</button>
+    `<span class="pkg-card">
+      ${p.photo?`<img src="${p.photo}" alt="${p.name}">`:''}
+      ${p.name} — ${fmt(p.price)}
+      <button data-i="${i}" class="rmPkg">✕</button>
     </span>`).join('') || '<span class="empty" style="padding:0;">Aucun paquet</span>';
   document.querySelectorAll('.rmPkg').forEach(b=>b.onclick=()=>{
     packages.splice(+b.dataset.i,1); savePackages(); renderPackages();
@@ -243,11 +272,21 @@ $('clientForm').addEventListener('submit', e=>{
 $('addPkg').addEventListener('click', ()=>{
   const name = $('pkgName').value.trim();
   const price = parseFloat($('pkgPrice').value);
+  const fileInput = $('pkgPhoto');
   if(!name || isNaN(price)) return;
-  packages.push({name, price});
-  savePackages();
-  $('pkgName').value=''; $('pkgPrice').value='';
-  renderPackages();
+  if(fileInput.files && fileInput.files[0]){
+    resizeImage(fileInput.files[0], 200, (dataUrl)=>{
+      packages.push({name, price, photo: dataUrl});
+      savePackages();
+      $('pkgName').value=''; $('pkgPrice').value=''; fileInput.value='';
+      renderPackages();
+    });
+  } else {
+    packages.push({name, price, photo:''});
+    savePackages();
+    $('pkgName').value=''; $('pkgPrice').value='';
+    renderPackages();
+  }
 });
 
 load();
