@@ -168,6 +168,10 @@ button{
 .add-purchase-form .row{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
 .add-purchase-form .row > div{flex:1; min-width:110px;}
 .add-purchase-form .actions{display:flex; gap:8px; margin-top:10px;}
+.sel-row{border:1px solid var(--line); border-radius:8px; padding:8px; margin-top:8px; background:var(--card);}
+.sel-row-top{display:flex; justify-content:space-between; align-items:center; font-size:.85rem;}
+.rm-sel{background:none; border:none; color:var(--due); cursor:pointer; padding:0; font-size:.95rem;}
+.sel-row .row{margin-top:6px;}
 .cancel-btn{background:transparent; color:var(--muted); border:1px solid var(--line);}
 
 .del-client{background:transparent; color:var(--due); border:none; font-size:.85rem; cursor:pointer;}
@@ -268,7 +272,7 @@ const $ = id => document.getElementById(id);
 let packages = [];
 let clients = []; // {id, name, date, purchases:[{package, price, paid, date}]}
 let openAddFor = null; // client id currently showing "add purchase" form
-let pickedPkgIdx = {}; // per client id, currently selected package index in the add-purchase form
+let selectedPkgs = {}; // per client id, array of selected keys ('manual' or package index as string)
 
 function uid(){ return 'c'+Date.now()+Math.random().toString(16).slice(2); }
 
@@ -496,16 +500,36 @@ function renderDashboard(){
 }
 
 function pkgPickerHtml(clientId){
-  const sel = pickedPkgIdx[clientId];
-  let html = `<div class="pkg-choice manual${sel===''||sel===undefined?' selected':''}" data-i="">
+  const sel = selectedPkgs[clientId] || [];
+  let html = `<div class="pkg-choice manual${sel.includes('manual')?' selected':''}" data-i="manual">
       <div class="ph">✎</div><div class="nm">Manuel</div></div>`;
   html += packages.map((p,i)=>`
-    <div class="pkg-choice${String(sel)===String(i)?' selected':''}" data-i="${i}">
+    <div class="pkg-choice${sel.includes(String(i))?' selected':''}" data-i="${i}">
       ${p.photo?`<img src="${p.photo}" alt="${p.name}">`:'<div class="ph">📦</div>'}
       <div class="nm">${p.name}</div>
       <div class="pr">${fmt(p.price)}</div>
     </div>`).join('');
   return html;
+}
+
+function selectedRowsHtml(clientId){
+  const sel = selectedPkgs[clientId] || [];
+  const methodOpts = METHODS.map(m=>'<option>'+m+'</option>').join('');
+  if(sel.length===0) return '<p class="empty" style="padding:6px 0;">Choisis un ou plusieurs paquets ci-dessus.</p>';
+  return sel.map(key=>{
+    const isManual = key==='manual';
+    const pkg = isManual ? null : packages[+key];
+    const name = isManual ? 'Manuel' : pkg.name;
+    const defPrice = isManual ? '' : pkg.price;
+    return `<div class="sel-row" data-selkey="${key}">
+      <div class="sel-row-top"><b>${name}</b><button type="button" class="rm-sel" data-cid="${clientId}" data-selkey="${key}">✕</button></div>
+      <div class="row">
+        <div><label>Prix</label><input type="number" step="1" class="row-price" value="${defPrice}"></div>
+        <div><label>Déjà versé</label><input type="number" step="1" class="row-paid" value="0"></div>
+        <div><label>Moyen</label><select class="row-method">${methodOpts}</select></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 const METHODS = ['Espèces','Wave','Orange Money','Autre'];
@@ -629,22 +653,9 @@ function renderClients(filter){
       ${purchasesHtml}
       <button class="add-purchase-btn" data-cid="${c.id}" data-action="toggleAdd">+ Ajouter un paquet</button>
       <div class="add-purchase-form${isOpen?' open':''}" id="addForm-${c.id}">
-        <label>Choisir un paquet</label>
+        <label>Choisir un ou plusieurs paquets</label>
         <div class="pkg-picker" id="pkgPicker-${c.id}">${pkgPickerHtml(c.id)}</div>
-        <div class="row">
-          <div>
-            <label>Prix</label>
-            <input type="number" step="0.01" id="price-${c.id}" value="${pickedPkgIdx[c.id]!==undefined && pickedPkgIdx[c.id]!=='' ? packages[+pickedPkgIdx[c.id]].price : ''}">
-          </div>
-          <div>
-            <label>Déjà versé</label>
-            <input type="number" step="0.01" id="paid-${c.id}" value="0">
-          </div>
-          <div>
-            <label>Date</label>
-            <input type="date" id="pdate-${c.id}">
-          </div>
-        </div>
+        <div id="selRows-${c.id}">${selectedRowsHtml(c.id)}</div>
         <div class="actions">
           <button class="btn-primary" data-cid="${c.id}" data-action="savePurchase">Enregistrer</button>
           <button class="cancel-btn" data-cid="${c.id}" data-action="cancelAdd">Annuler</button>
@@ -658,7 +669,7 @@ function renderClients(filter){
   list.querySelectorAll('[data-action="toggleAdd"]').forEach(b=>b.onclick=()=>{
     const cid = b.dataset.cid;
     openAddFor = (openAddFor === cid) ? null : cid;
-    if(openAddFor) pickedPkgIdx[cid] = pickedPkgIdx[cid] ?? '';
+    if(openAddFor) selectedPkgs[cid] = selectedPkgs[cid] || [];
     rerender();
   });
   list.querySelectorAll('[data-action="cancelAdd"]').forEach(b=>b.onclick=()=>{
@@ -708,21 +719,28 @@ function renderClients(filter){
   list.querySelectorAll('[data-action="savePurchase"]').forEach(b=>b.onclick=()=>{
     const cid = b.dataset.cid;
     const c = clients.find(c=>c.id===cid);
-    const idx = pickedPkgIdx[cid];
-    const pkgName = (idx!==undefined && idx!=='') ? packages[+idx].name : 'Manuel';
-    const price = parseFloat($('price-'+cid).value)||0;
-    let paid = parseFloat($('paid-'+cid).value)||0;
-    const date = $('pdate-'+cid).value || today();
-    if(price<=0) return;
-    if(paid>price) paid = price;
+    const container = document.getElementById('selRows-'+cid);
+    const rows = container ? container.querySelectorAll('.sel-row') : [];
+    if(rows.length===0) return;
+    const date = today();
     c.purchases = c.purchases || [];
-    c.purchases.push({
-      package:pkgName, price, paid, date,
-      payments: paid>0 ? [{amount:paid, date, method:'Espèces'}] : []
+    rows.forEach(row=>{
+      const key = row.dataset.selkey;
+      const isManual = key==='manual';
+      const pkgName = isManual ? 'Manuel' : packages[+key].name;
+      let price = parseFloat(row.querySelector('.row-price').value)||0;
+      let paid = parseFloat(row.querySelector('.row-paid').value)||0;
+      const method = row.querySelector('.row-method').value;
+      if(price<=0) return;
+      if(paid>price) paid = price;
+      c.purchases.push({
+        package:pkgName, price, paid, date,
+        payments: paid>0 ? [{amount:paid, date, method}] : []
+      });
     });
     saveClients();
     openAddFor = null;
-    delete pickedPkgIdx[cid];
+    delete selectedPkgs[cid];
     renderAll();
   });
 
@@ -731,10 +749,20 @@ function renderClients(filter){
     if(!picker) return;
     picker.querySelectorAll('.pkg-choice').forEach(el=>{
       el.onclick = ()=>{
-        pickedPkgIdx[c.id] = el.dataset.i;
+        const key = el.dataset.i;
+        const arr = selectedPkgs[c.id] || (selectedPkgs[c.id] = []);
+        const at = arr.indexOf(key);
+        if(at>=0) arr.splice(at,1); else arr.push(key);
         rerender();
       };
     });
+  });
+  list.querySelectorAll('.rm-sel').forEach(b=>b.onclick=()=>{
+    const cid = b.dataset.cid, key = b.dataset.selkey;
+    const arr = selectedPkgs[cid] || [];
+    const at = arr.indexOf(key);
+    if(at>=0) arr.splice(at,1);
+    rerender();
   });
 }
 
@@ -764,7 +792,7 @@ $('clientForm').addEventListener('submit', e=>{
   saveClients();
   e.target.reset();
   openAddFor = newClient.id;
-  pickedPkgIdx[newClient.id] = '';
+  selectedPkgs[newClient.id] = [];
   renderAll();
   const el = document.getElementById('addForm-'+newClient.id);
   if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
